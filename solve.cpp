@@ -35,26 +35,21 @@ public:
     } 
 };
 
-point getUnvisitedNeighbors(Maze& m ,unordered_set<point, MyHashFunction, MyEqualFunction>& visited, point currPosition)
+bool getUnvisitedNeighbors(point& neighbor,
+                           unordered_set<point, MyHashFunction, MyEqualFunction>& visited, 
+                           point currPosition,
+                           Maze& m)
 {
-    point newLocation = make_pair(-1,-1);
-    if(m.can_go(0,currPosition.first, currPosition.second) && visited.find(currPosition + moveIn(0)) == visited.end())
+    for(uint16_t i = 0 ; i < 4 ; i++)
+    {
+        neighbor = currPosition + moveIn(i);
+        if(m.can_go(i,currPosition.first, currPosition.second) && 
+           visited.find(neighbor) == visited.end())
         {
-            newLocation = currPosition + moveIn(0);
+            return true;
         }
-    else if(m.can_go(1,currPosition.first, currPosition.second) && visited.find(currPosition + moveIn(1)) == visited.end())
-        {
-            newLocation = currPosition + moveIn(1);
-        }
-    else if(m.can_go(2,currPosition.first, currPosition.second) && visited.find(currPosition + moveIn(2)) == visited.end())
-        {
-            newLocation = currPosition + moveIn(2);
-        }
-    else if(m.can_go(3,currPosition.first, currPosition.second) && visited.find(currPosition + moveIn(3)) == visited.end())
-        {
-            newLocation = currPosition + moveIn(3); 
-        }
-    return newLocation;
+    }
+    return false;
 }
 
 int main(int argc, char** argv)
@@ -174,9 +169,9 @@ path solve_dfs(Maze& m, int rows, int cols)
         if(visited.find(currPosition) == visited.end())
             visited.emplace(currPosition);
 
-        newPosition = getUnvisitedNeighbors(m,visited,currPosition);
+        bool found  = getUnvisitedNeighbors(newPosition,visited, currPosition,m);
 
-        if(newPosition != make_pair(-1,-1))
+        if(found)
         {
             stacklist.push(newPosition);
             path.push_back(newPosition);
