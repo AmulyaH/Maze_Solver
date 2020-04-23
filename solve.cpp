@@ -20,9 +20,9 @@ path solve_tour(Maze &m, int rows, int cols);
 
 using my_pair_t = std::pair<point, size_t>;
 
-using my_tuple_t = tuple<point, point, size_t>;
+//using my_tuple_t = tuple<point, point, size_t>;
 
-using my_container_t = std::vector<my_tuple_t>;
+using my_container_t = std::vector<my_pair_t>;
 
 class MyHashFunction
 {
@@ -200,15 +200,12 @@ path solve_bfs(Maze &m, int rows, int cols)
 
 path solve_dijkstra(Maze &m, int rows, int cols)
 {
-    queue<point> queuelist;
     list<point> path;
-    point current = make_pair(0, 0);
-    //queuelist.push(current);
-    //path.push_back(current);
+    point start = make_pair(0, 0);
     int row = m.rows();
     int col = m.columns();
     point end = make_pair(row - 1, col - 1);
-    my_tuple_t currPosition;
+    my_pair_t currPosition;
 
     unordered_map<point, int, MyHashFunction, MyEqualFunction> cellCost;
 
@@ -221,24 +218,11 @@ path solve_dijkstra(Maze &m, int rows, int cols)
         }
     }
 
-    /*
-    vector<vector<int>> vec;
-
-    for(int i=0; i< col ; i++)
-    {
-        vec.push_back(vector<int>());
-        for(int j=0; j< row ; j++)
-        {
-            vec[i].push_back(INT_MAX);
-        }
-    }
-    */
-
     unordered_set<point, MyHashFunction, MyEqualFunction> visited;
     unordered_map<point,point, MyHashFunction, MyEqualFunction> prev;
 
     auto my_comp =
-        [](const my_tuple_t &e1, const my_tuple_t &e2) { return std::get<2>(e1) > std::get<2>(e2); };
+        [](const my_pair_t &e1, const my_pair_t &e2) { return e1.second > e2.second; };
 
     std::priority_queue<my_pair_t,
                         my_container_t,
@@ -246,33 +230,26 @@ path solve_dijkstra(Maze &m, int rows, int cols)
 
     point pre = make_pair(0,0);
 
-    queue.push(make_tuple(current,pre,0));
+    queue.emplace(start,0);
+
+    //queue.push(make_tuple(start,pre,0));
 
     while (!queue.empty())
     {
-        point ppp = get<0>(currPosition);
+        point ppp = queue.top().first;
         currPosition = queue.top();
-        point curr = get<0>(currPosition);
+        point curr = queue.top().first;
+        queue.pop();
 
-        
         if (curr == end)
         {
-           // prev[curr] = ppp;
-           // path.push_back(curr);
-        cout <<"from top stroing "<< "("<<prev[curr].first <<" "<<prev[curr].second <<")"<<" is prev of " << 
-        "("<<curr.first <<" "<<curr.second <<")"<< ", cost :" << get<2>(queue.top())<< "\n";
-            
             break;
         }
 
-        queue.pop();
-
-        bool flag = false;
+        //bool flag = false;
 
         point newPosition;
         size_t cost;
-
-        //queue.empty();
         
         if (visited.find(curr) == visited.end())
         {
@@ -283,82 +260,58 @@ path solve_dijkstra(Maze &m, int rows, int cols)
         {
             newPosition = curr + moveIn(0);
 
-            //vec[newPosition.first][newPosition.second]
-            cost = get<2>(currPosition) + m.cost(curr, 0);
+            cost = currPosition.second + m.cost(curr, 0);
             if (cellCost[newPosition] > cost)
             {
                 cellCost[newPosition] = cost;
-                queue.push(make_tuple(newPosition,curr,cost));
-                //queue.push(make_pair(newPosition, cost));
-                //queue[newPosition] = cost;
-                 prev[newPosition] =  curr;
-                flag = true;
+                queue.emplace(newPosition,cost);
+                prev[newPosition] =  curr;
             }
         }
         if (m.can_go(1, curr.first, curr.second) && visited.find(curr + moveIn(1)) == visited.end())
         {
             newPosition = curr + moveIn(1);
-            cost = get<2>(currPosition) + m.cost(curr, 1);
+            cost = currPosition.second + m.cost(curr, 1);
             if (cellCost[newPosition] > cost)
             {
                 cellCost[newPosition] = cost;
-                queue.push(make_tuple(newPosition,curr,cost));
-                //queue.push(make_pair(newPosition, cost));
-                 prev[newPosition] =  curr;
-                flag = true;
+                 queue.emplace(newPosition,cost);
+                prev[newPosition] =  curr;
             }
         }
         if (m.can_go(2, curr.first, curr.second) && visited.find(curr + moveIn(2)) == visited.end())
         {
             newPosition = curr + moveIn(2);
-            cost = get<2>(currPosition) + m.cost(curr, 2);
+            cost = currPosition.second + m.cost(curr, 2);
             if (cellCost[newPosition] > cost)
             {
                 cellCost[newPosition] = cost;
-                queue.push(make_tuple(newPosition,curr,cost));
+                 queue.emplace(newPosition,cost);
                  prev[newPosition] =  curr;
-                flag = true;
             }
         }
         if (m.can_go(3, curr.first, curr.second) && visited.find(curr + moveIn(3)) == visited.end())
         {
             newPosition = curr + moveIn(3);
-            cost = get<2>(currPosition) + m.cost(curr, 3);
+            cost = currPosition.second  + m.cost(curr, 3);
             if (cellCost[newPosition] > cost)
             {
                 cellCost[newPosition] = cost;
-                queue.push(make_tuple(newPosition,curr,cost));
+                 queue.emplace(newPosition,cost);
                  prev[newPosition] =  curr;
-                flag = true;
             }
         }
-        if (flag)
-        {
-            point x = get<0>(queue.top());
-            //prev[x] =  get<1>(queue.top());
-
-        cout <<"stroing "<< "("<<prev[x].first <<" "<<prev[x].second <<")"<<" is prev of " << 
-        "("<<x.first <<" "<<x.second <<")"<< ", cost :" << get<2>(queue.top())<< "\n";
-
-           // path.push_back(x);
-            // m.print_maze_with_path(cout, path, true, false);
-        }
-
     }
-
-   // path.clear();
     point currPt = end;
-    while (prev.find(currPt) != prev.end() || currPt != make_pair(0,0))
-    {
 
+    while (prev.find(currPt) != prev.end() || currPt != start)
+    {
         point prevPT = prev[currPt];
         cout <<"prev : "<<prevPT.first <<", "<<prevPT.second<<"is prev of "<< currPt.first <<"  "<<currPt.second <<"\n";
         path.push_front(currPt);
         currPt = prevPT;
     }
-    path.push_front(make_pair(0,0));
-    //path.push_back(make_pair(0,0));
-    m.print_maze_with_path(cout, path, true, false);
+    path.push_front(start);
     
     return path;
 }
