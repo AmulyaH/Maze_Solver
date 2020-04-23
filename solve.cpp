@@ -204,7 +204,7 @@ path solve_dijkstra(Maze &m, int rows, int cols)
     list<point> path;
     point current = make_pair(0, 0);
     //queuelist.push(current);
-    path.push_back(current);
+    //path.push_back(current);
     int row = m.rows();
     int col = m.columns();
     point end = make_pair(row - 1, col - 1);
@@ -257,15 +257,8 @@ path solve_dijkstra(Maze &m, int rows, int cols)
         
         if (curr == end)
         {
-            while (!queue.empty())
-            {
-                point x = get<0>(queue.top());
-                prev[x] =  get<1>(queue.top());
-                queue.pop();
-            }
-
            // prev[curr] = ppp;
-            path.push_back(curr);
+           // path.push_back(curr);
         cout <<"from top stroing "<< "("<<prev[curr].first <<" "<<prev[curr].second <<")"<<" is prev of " << 
         "("<<curr.first <<" "<<curr.second <<")"<< ", cost :" << get<2>(queue.top())<< "\n";
             
@@ -298,6 +291,7 @@ path solve_dijkstra(Maze &m, int rows, int cols)
                 queue.push(make_tuple(newPosition,curr,cost));
                 //queue.push(make_pair(newPosition, cost));
                 //queue[newPosition] = cost;
+                 prev[newPosition] =  curr;
                 flag = true;
             }
         }
@@ -310,6 +304,7 @@ path solve_dijkstra(Maze &m, int rows, int cols)
                 cellCost[newPosition] = cost;
                 queue.push(make_tuple(newPosition,curr,cost));
                 //queue.push(make_pair(newPosition, cost));
+                 prev[newPosition] =  curr;
                 flag = true;
             }
         }
@@ -321,6 +316,7 @@ path solve_dijkstra(Maze &m, int rows, int cols)
             {
                 cellCost[newPosition] = cost;
                 queue.push(make_tuple(newPosition,curr,cost));
+                 prev[newPosition] =  curr;
                 flag = true;
             }
         }
@@ -332,35 +328,36 @@ path solve_dijkstra(Maze &m, int rows, int cols)
             {
                 cellCost[newPosition] = cost;
                 queue.push(make_tuple(newPosition,curr,cost));
+                 prev[newPosition] =  curr;
                 flag = true;
             }
         }
         if (flag)
         {
             point x = get<0>(queue.top());
-            prev[x] =  get<1>(queue.top());
+            //prev[x] =  get<1>(queue.top());
 
         cout <<"stroing "<< "("<<prev[x].first <<" "<<prev[x].second <<")"<<" is prev of " << 
         "("<<x.first <<" "<<x.second <<")"<< ", cost :" << get<2>(queue.top())<< "\n";
 
-            path.push_back(x);
-             m.print_maze_with_path(cout, path, true, false);
+           // path.push_back(x);
+            // m.print_maze_with_path(cout, path, true, false);
         }
 
     }
 
-    path.clear();
+   // path.clear();
     point currPt = end;
     while (prev.find(currPt) != prev.end() || currPt != make_pair(0,0))
     {
 
         point prevPT = prev[currPt];
         cout <<"prev : "<<prevPT.first <<", "<<prevPT.second<<"is prev of "<< currPt.first <<"  "<<currPt.second <<"\n";
-        path.push_back(currPt);
+        path.push_front(currPt);
         currPt = prevPT;
     }
-
-    path.push_back(make_pair(0,0));
+    path.push_front(make_pair(0,0));
+    //path.push_back(make_pair(0,0));
     m.print_maze_with_path(cout, path, true, false);
     
     return path;
