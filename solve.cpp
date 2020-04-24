@@ -60,6 +60,87 @@ bool getUnvisitedNeighbors(point &neighbor,
     return false;
 }
 
+path getpath(Maze &m, point start, point end)
+{
+    list<point> path;
+
+    my_pair_t currPosition;
+
+    unordered_map<point, int, MyHashFunction, MyEqualFunction> cellCost;
+
+    for (int i = 0; i < end.first+1; i++)
+    {
+        for (int j = 0; j < end.second+1 ; j++)
+        {
+            point p = make_pair(i, j);
+            cellCost[p] = INT_MAX;
+        }
+    }
+
+    unordered_set<point, MyHashFunction, MyEqualFunction> visited;
+    unordered_map<point, point, MyHashFunction, MyEqualFunction> prev;
+
+    auto my_comp = [](const my_pair_t &e1, const my_pair_t &e2) { return e1.second > e2.second; };
+
+    std::priority_queue<my_pair_t,
+                        my_container_t,
+                        decltype(my_comp)>
+        queue(my_comp);
+
+    point pre = make_pair(0, 0);
+
+    queue.emplace(start, 0);
+
+    while (!queue.empty())
+    {
+        point ppp = queue.top().first;
+        currPosition = queue.top();
+        point curr = queue.top().first;
+        queue.pop();
+
+        if (curr == end)
+        {
+            break;
+        }
+
+        point newPosition;
+        size_t cost;
+
+        if (visited.find(curr) == visited.end())
+        {
+            visited.emplace(curr);
+        }
+
+        for(int16_t i = 0; i< 4; i++)
+        {
+            if (m.can_go(i, curr.first, curr.second) && visited.find(curr + moveIn(i)) == visited.end())
+            {
+                newPosition = curr + moveIn(i);
+
+                cost = currPosition.second + m.cost(curr, i);
+                if (cellCost[newPosition] > cost)
+                {
+                    cellCost[newPosition] = cost;
+                    queue.emplace(newPosition, cost);
+                    prev[newPosition] = curr;
+                }
+            }
+        }
+    }
+    point currPt = end;
+
+    while (prev.find(currPt) != prev.end() || currPt != start)
+    {
+        point prevPT = prev[currPt];
+        cout << "prev : " << prevPT.first << ", " << prevPT.second << "is prev of " << currPt.first << "  " << currPt.second << "\n";
+        path.push_front(currPt);
+        currPt = prevPT;
+    }
+    path.push_front(start);
+
+    return path;
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 4)
@@ -197,6 +278,7 @@ path solve_bfs(Maze &m, int rows, int cols)
     queue<point> queuelist;
     point start = make_pair(0, 0);
     point end = make_pair(rows - 1, cols - 1);
+
     list<point> path;
 
     queuelist.emplace(start);
@@ -240,119 +322,19 @@ path solve_bfs(Maze &m, int rows, int cols)
 
 path solve_dijkstra(Maze &m, int rows, int cols)
 {
-    list<point> path;
     point start = make_pair(0, 0);
     int row = m.rows();
     int col = m.columns();
-    point end = make_pair(row - 1, col - 1);
-    my_pair_t currPosition;
+    point end = make_pair(rows-1, cols - 1);
 
-    unordered_map<point, int, MyHashFunction, MyEqualFunction> cellCost;
-
-    for (int i = 0; i < row; i++)
-    {
-        for (int j = 0; j < col; j++)
-        {
-            point p = make_pair(i, j);
-            cellCost[p] = INT_MAX;
-        }
-    }
-
-    unordered_set<point, MyHashFunction, MyEqualFunction> visited;
-    unordered_map<point, point, MyHashFunction, MyEqualFunction> prev;
-
-    auto my_comp = [](const my_pair_t &e1, const my_pair_t &e2) { return e1.second > e2.second; };
-
-    std::priority_queue<my_pair_t,
-                        my_container_t,
-                        decltype(my_comp)>
-        queue(my_comp);
-
-    point pre = make_pair(0, 0);
-
-    queue.emplace(start, 0);
-
-    while (!queue.empty())
-    {
-        point ppp = queue.top().first;
-        currPosition = queue.top();
-        point curr = queue.top().first;
-        queue.pop();
-
-        if (curr == end)
-        {
-            break;
-        }
-
-        point newPosition;
-        size_t cost;
-
-        if (visited.find(curr) == visited.end())
-        {
-            visited.emplace(curr);
-        }
-
-        if (m.can_go(0, curr.first, curr.second) && visited.find(curr + moveIn(0)) == visited.end())
-        {
-            newPosition = curr + moveIn(0);
-
-            cost = currPosition.second + m.cost(curr, 0);
-            if (cellCost[newPosition] > cost)
-            {
-                cellCost[newPosition] = cost;
-                queue.emplace(newPosition, cost);
-                prev[newPosition] = curr;
-            }
-        }
-        if (m.can_go(1, curr.first, curr.second) && visited.find(curr + moveIn(1)) == visited.end())
-        {
-            newPosition = curr + moveIn(1);
-            cost = currPosition.second + m.cost(curr, 1);
-            if (cellCost[newPosition] > cost)
-            {
-                cellCost[newPosition] = cost;
-                queue.emplace(newPosition, cost);
-                prev[newPosition] = curr;
-            }
-        }
-        if (m.can_go(2, curr.first, curr.second) && visited.find(curr + moveIn(2)) == visited.end())
-        {
-            newPosition = curr + moveIn(2);
-            cost = currPosition.second + m.cost(curr, 2);
-            if (cellCost[newPosition] > cost)
-            {
-                cellCost[newPosition] = cost;
-                queue.emplace(newPosition, cost);
-                prev[newPosition] = curr;
-            }
-        }
-        if (m.can_go(3, curr.first, curr.second) && visited.find(curr + moveIn(3)) == visited.end())
-        {
-            newPosition = curr + moveIn(3);
-            cost = currPosition.second + m.cost(curr, 3);
-            if (cellCost[newPosition] > cost)
-            {
-                cellCost[newPosition] = cost;
-                queue.emplace(newPosition, cost);
-                prev[newPosition] = curr;
-            }
-        }
-    }
-    point currPt = end;
-
-    while (prev.find(currPt) != prev.end() || currPt != start)
-    {
-        point prevPT = prev[currPt];
-        cout << "prev : " << prevPT.first << ", " << prevPT.second << "is prev of " << currPt.first << "  " << currPt.second << "\n";
-        path.push_front(currPt);
-        currPt = prevPT;
-    }
-    path.push_front(start);
+    list<point> path = getpath(m, start, end);
 
     return path;
 }
 
 path solve_tour(Maze &m, int rows, int cols)
 {
+
+
     return list<point>();
 }
