@@ -65,12 +65,14 @@ path getpath(Maze &m, point start, point end)
     list<point> path;
 
     my_pair_t currPosition;
+    int row = m.rows();
+    int col = m.columns();
 
     unordered_map<point, int, MyHashFunction, MyEqualFunction> cellCost;
 
-    for (int i = 0; i < end.first+1; i++)
+    for (int i = 0; i < row; i++)
     {
-        for (int j = 0; j < end.second+1 ; j++)
+        for (int j = 0; j < col; j++)
         {
             point p = make_pair(i, j);
             cellCost[p] = INT_MAX;
@@ -111,7 +113,7 @@ path getpath(Maze &m, point start, point end)
             visited.emplace(curr);
         }
 
-        for(int16_t i = 0; i< 4; i++)
+        for (int16_t i = 0; i < 4; i++)
         {
             if (m.can_go(i, curr.first, curr.second) && visited.find(curr + moveIn(i)) == visited.end())
             {
@@ -325,7 +327,7 @@ path solve_dijkstra(Maze &m, int rows, int cols)
     point start = make_pair(0, 0);
     int row = m.rows();
     int col = m.columns();
-    point end = make_pair(rows-1, cols - 1);
+    point end = make_pair(rows - 1, cols - 1);
 
     list<point> path = getpath(m, start, end);
 
@@ -334,7 +336,48 @@ path solve_dijkstra(Maze &m, int rows, int cols)
 
 path solve_tour(Maze &m, int rows, int cols)
 {
+    int r = rows / 2;
+    int c = cols / 2;
+    point start = make_pair(r, c);
 
+    list<point> path, path1, path2, path3, path4;
 
-    return list<point>();
+    point corner1 = make_pair(0, 0);
+    point corner2 = make_pair(0, cols - 1);
+    point corner3 = make_pair(rows - 1, cols - 1);
+    point corner4 = make_pair(rows - 1, 0);
+
+    path = getpath(m, start, corner1);
+
+    path1 = getpath(m, corner1, corner2);
+    path1.pop_front();
+    path2 = getpath(m, corner2, corner3);
+    path2.pop_front();
+    path3 = getpath(m, corner3, corner4);
+    path3.pop_front();
+    path4 = getpath(m, corner4, start);
+    path4.pop_front();
+
+    while (!path1.empty())
+    {
+        path.push_back(path1.front());
+        path1.pop_front();
+    }
+    while (!path2.empty())
+    {
+        path.push_back(path2.front());
+        path2.pop_front();
+    }
+    while (!path3.empty())
+    {
+        path.push_back(path3.front());
+        path3.pop_front();
+    }
+     while (!path4.empty())
+    {
+        path.push_back(path4.front());
+        path4.pop_front();
+    }
+ 
+    return path;
 }
