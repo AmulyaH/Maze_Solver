@@ -194,8 +194,48 @@ path solve_dfs(Maze &m, int rows, int cols)
 
 path solve_bfs(Maze &m, int rows, int cols)
 {
+    queue<point> queuelist;
+    point start = make_pair(0, 0);
+    point end = make_pair(rows - 1, cols - 1);
+    list<point> path;
 
-    return list<point>();
+    queuelist.emplace(start);
+    point currPosition;
+
+    unordered_set<point, MyHashFunction, MyEqualFunction> visited;
+    unordered_map<point, point, MyHashFunction, MyEqualFunction> prev;
+
+    while (!queuelist.empty())
+    {
+        currPosition = queuelist.front();
+        if (currPosition == end)
+        {
+            break;
+        }
+        point newPosition;
+        queuelist.pop();
+
+        for (uint16_t i = 0; i < 4; i++)
+        {
+            newPosition = currPosition + moveIn(i);
+            if (m.can_go(i, currPosition.first, currPosition.second) && visited.find(newPosition) == visited.end())
+            {
+                visited.emplace(newPosition);
+                queuelist.emplace(newPosition);
+                prev[newPosition] = currPosition;
+            }
+        }
+    }
+
+    point currPt = end;
+    while (prev.find(currPt) != prev.end() && currPt != start)
+    {
+        point prevPT = prev[currPt];
+        path.push_front(currPt);
+        currPt = prevPT;
+    }
+    path.push_front(start);
+    return path;
 }
 
 path solve_dijkstra(Maze &m, int rows, int cols)
@@ -219,20 +259,18 @@ path solve_dijkstra(Maze &m, int rows, int cols)
     }
 
     unordered_set<point, MyHashFunction, MyEqualFunction> visited;
-    unordered_map<point,point, MyHashFunction, MyEqualFunction> prev;
+    unordered_map<point, point, MyHashFunction, MyEqualFunction> prev;
 
-    auto my_comp =
-        [](const my_pair_t &e1, const my_pair_t &e2) { return e1.second > e2.second; };
+    auto my_comp = [](const my_pair_t &e1, const my_pair_t &e2) { return e1.second > e2.second; };
 
     std::priority_queue<my_pair_t,
                         my_container_t,
-                        decltype(my_comp)> queue(my_comp);
+                        decltype(my_comp)>
+        queue(my_comp);
 
-    point pre = make_pair(0,0);
+    point pre = make_pair(0, 0);
 
-    queue.emplace(start,0);
-
-    //queue.push(make_tuple(start,pre,0));
+    queue.emplace(start, 0);
 
     while (!queue.empty())
     {
@@ -246,16 +284,14 @@ path solve_dijkstra(Maze &m, int rows, int cols)
             break;
         }
 
-        //bool flag = false;
-
         point newPosition;
         size_t cost;
-        
+
         if (visited.find(curr) == visited.end())
         {
             visited.emplace(curr);
         }
-       
+
         if (m.can_go(0, curr.first, curr.second) && visited.find(curr + moveIn(0)) == visited.end())
         {
             newPosition = curr + moveIn(0);
@@ -264,8 +300,8 @@ path solve_dijkstra(Maze &m, int rows, int cols)
             if (cellCost[newPosition] > cost)
             {
                 cellCost[newPosition] = cost;
-                queue.emplace(newPosition,cost);
-                prev[newPosition] =  curr;
+                queue.emplace(newPosition, cost);
+                prev[newPosition] = curr;
             }
         }
         if (m.can_go(1, curr.first, curr.second) && visited.find(curr + moveIn(1)) == visited.end())
@@ -275,8 +311,8 @@ path solve_dijkstra(Maze &m, int rows, int cols)
             if (cellCost[newPosition] > cost)
             {
                 cellCost[newPosition] = cost;
-                 queue.emplace(newPosition,cost);
-                prev[newPosition] =  curr;
+                queue.emplace(newPosition, cost);
+                prev[newPosition] = curr;
             }
         }
         if (m.can_go(2, curr.first, curr.second) && visited.find(curr + moveIn(2)) == visited.end())
@@ -286,19 +322,19 @@ path solve_dijkstra(Maze &m, int rows, int cols)
             if (cellCost[newPosition] > cost)
             {
                 cellCost[newPosition] = cost;
-                 queue.emplace(newPosition,cost);
-                 prev[newPosition] =  curr;
+                queue.emplace(newPosition, cost);
+                prev[newPosition] = curr;
             }
         }
         if (m.can_go(3, curr.first, curr.second) && visited.find(curr + moveIn(3)) == visited.end())
         {
             newPosition = curr + moveIn(3);
-            cost = currPosition.second  + m.cost(curr, 3);
+            cost = currPosition.second + m.cost(curr, 3);
             if (cellCost[newPosition] > cost)
             {
                 cellCost[newPosition] = cost;
-                 queue.emplace(newPosition,cost);
-                 prev[newPosition] =  curr;
+                queue.emplace(newPosition, cost);
+                prev[newPosition] = curr;
             }
         }
     }
@@ -307,12 +343,12 @@ path solve_dijkstra(Maze &m, int rows, int cols)
     while (prev.find(currPt) != prev.end() || currPt != start)
     {
         point prevPT = prev[currPt];
-        cout <<"prev : "<<prevPT.first <<", "<<prevPT.second<<"is prev of "<< currPt.first <<"  "<<currPt.second <<"\n";
+        cout << "prev : " << prevPT.first << ", " << prevPT.second << "is prev of " << currPt.first << "  " << currPt.second << "\n";
         path.push_front(currPt);
         currPt = prevPT;
     }
     path.push_front(start);
-    
+
     return path;
 }
 
