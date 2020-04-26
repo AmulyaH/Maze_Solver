@@ -19,15 +19,11 @@ path solve_dijkstra(Maze &m, int rows, int cols);
 path solve_tour(Maze &m, int rows, int cols);
 
 using my_pair_t = std::pair<point, size_t>;
-
-//using my_tuple_t = tuple<point, point, size_t>;
-
 using my_container_t = std::vector<my_pair_t>;
 
 class MyHashFunction
 {
 public:
-    // id is returned as hash function
     size_t operator()(const point &p) const
     {
         return (hash<int>()(p.first)) ^ (hash<int>()(p.second) << 1);
@@ -60,19 +56,17 @@ bool getUnvisitedNeighbors(point &neighbor,
     return false;
 }
 
-path getpath(Maze &m, point start, point end)
+path getShortestpath(Maze &m, point start, point end)
 {
     list<point> path;
-
+    point newPosition;
+    size_t cost;
     my_pair_t currPosition;
-    int row = m.rows();
-    int col = m.columns();
-
     unordered_map<point, int, MyHashFunction, MyEqualFunction> cellCost;
 
-    for (int i = 0; i < row; i++)
+    for (int i = 0; i < m.rows() ; i++)
     {
-        for (int j = 0; j < col; j++)
+        for (int j = 0; j < m.columns(); j++)
         {
             point p = make_pair(i, j);
             cellCost[p] = INT_MAX;
@@ -86,16 +80,12 @@ path getpath(Maze &m, point start, point end)
 
     std::priority_queue<my_pair_t,
                         my_container_t,
-                        decltype(my_comp)>
-        queue(my_comp);
-
-    point pre = make_pair(0, 0);
+                        decltype(my_comp)> queue(my_comp);
 
     queue.emplace(start, 0);
 
     while (!queue.empty())
     {
-        point ppp = queue.top().first;
         currPosition = queue.top();
         point curr = queue.top().first;
         queue.pop();
@@ -104,9 +94,6 @@ path getpath(Maze &m, point start, point end)
         {
             break;
         }
-
-        point newPosition;
-        size_t cost;
 
         if (visited.find(curr) == visited.end())
         {
@@ -118,7 +105,6 @@ path getpath(Maze &m, point start, point end)
             if (m.can_go(i, curr.first, curr.second) && visited.find(curr + moveIn(i)) == visited.end())
             {
                 newPosition = curr + moveIn(i);
-
                 cost = currPosition.second + m.cost(curr, i);
                 if (cellCost[newPosition] > cost)
                 {
@@ -129,17 +115,16 @@ path getpath(Maze &m, point start, point end)
             }
         }
     }
+
     point currPt = end;
 
     while (prev.find(currPt) != prev.end() || currPt != start)
     {
         point prevPT = prev[currPt];
-        cout << "prev : " << prevPT.first << ", " << prevPT.second << "is prev of " << currPt.first << "  " << currPt.second << "\n";
         path.push_front(currPt);
         currPt = prevPT;
     }
     path.push_front(start);
-
     return path;
 }
 
@@ -237,29 +222,28 @@ path solve_dfs(Maze &m, int rows, int cols)
 {
     stack<point> stacklist;
     list<point> path;
-    point current = make_pair(0, 0);
-    stacklist.push(current);
-    path.push_back(current);
-
-    int row = m.rows();
-    int col = m.columns();
     point currPosition;
-    point end = make_pair(row - 1, col - 1);
-    bool flag = false;
+    
+    point start = make_pair(0, 0);
+    point end = make_pair(rows - 1, cols - 1);
+
+    stacklist.push(start);
+    path.push_back(start);
 
     unordered_set<point, MyHashFunction, MyEqualFunction> visited;
+    point newPosition;
+    bool found = false;
 
     while (true)
     {
         currPosition = stacklist.top();
         if (currPosition == end)
             break;
-        point newPosition;
 
         if (visited.find(currPosition) == visited.end())
             visited.emplace(currPosition);
 
-        bool found = getUnvisitedNeighbors(newPosition, visited, currPosition, m);
+        found = getUnvisitedNeighbors(newPosition, visited, currPosition, m);
 
         if (found)
         {
@@ -282,9 +266,10 @@ path solve_bfs(Maze &m, int rows, int cols)
     point end = make_pair(rows - 1, cols - 1);
 
     list<point> path;
+    point currPosition;
+    point newPosition;
 
     queuelist.emplace(start);
-    point currPosition;
 
     unordered_set<point, MyHashFunction, MyEqualFunction> visited;
     unordered_map<point, point, MyHashFunction, MyEqualFunction> prev;
@@ -296,7 +281,6 @@ path solve_bfs(Maze &m, int rows, int cols)
         {
             break;
         }
-        point newPosition;
         queuelist.pop();
 
         for (uint16_t i = 0; i < 4; i++)
@@ -325,37 +309,34 @@ path solve_bfs(Maze &m, int rows, int cols)
 path solve_dijkstra(Maze &m, int rows, int cols)
 {
     point start = make_pair(0, 0);
-    int row = m.rows();
-    int col = m.columns();
     point end = make_pair(rows - 1, cols - 1);
 
-    list<point> path = getpath(m, start, end);
+    list<point> path = getShortestpath(m, start, end);
 
     return path;
 }
 
 path solve_tour(Maze &m, int rows, int cols)
 {
-    int r = rows / 2;
-    int c = cols / 2;
-    point start = make_pair(r, c);
-
-    list<point> path, path1, path2, path3, path4;
+    point start = make_pair(rows/2, cols/2);
 
     point corner1 = make_pair(0, 0);
     point corner2 = make_pair(0, cols - 1);
     point corner3 = make_pair(rows - 1, cols - 1);
     point corner4 = make_pair(rows - 1, 0);
 
-    path = getpath(m, start, corner1);
+    list<point> path = getShortestpath(m, start, corner1);
 
-    path1 = getpath(m, corner1, corner2);
+    list<point> path1 = getShortestpath(m, corner1, corner2);
     path1.pop_front();
-    path2 = getpath(m, corner2, corner3);
+
+    list<point> path2 = getShortestpath(m, corner2, corner3);
     path2.pop_front();
-    path3 = getpath(m, corner3, corner4);
+
+    list<point> path3 = getShortestpath(m, corner3, corner4);
     path3.pop_front();
-    path4 = getpath(m, corner4, start);
+
+    list<point> path4 = getShortestpath(m, corner4, start);
     path4.pop_front();
 
     while (!path1.empty())
